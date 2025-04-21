@@ -28,6 +28,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    # --- AI Service API Keys (Load from environment variables!) ---
+    OPENAI_API_KEY: str | None = Field(default=None)
+    GEMINI_API_KEY: str | None = Field(default=None)
+    DEEPSEEK_API_KEY: str | None = Field(default=None) # Placeholder
+    MISTRAL_API_KEY: str | None = Field(default=None) # Placeholder
+
     class Config:
         # Optional: Load .env file if you prefer using python-dotenv
         # env_file = ".env"

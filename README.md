@@ -35,6 +35,9 @@ This project provides a backend API for managing personal finances, allowing use
     *   Generate yearly financial summary (`GET /reports/yearly`).
     *   Generate custom date range summary (`GET /reports/custom`).
     *   Reports include totals and category breakdowns, scoped per user.
+*   **AI Consultation:** (Requires Authentication)
+    *   Endpoint (`POST /ai-consultation/`) to ask financial questions to supported AI providers (OpenAI, Gemini, etc.).
+    *   *Note: Requires API keys to be configured via environment variables. Service logic is currently placeholder.*
 *   **Authentication & Authorization:** JWT-based authentication (Access & Refresh Tokens). Endpoints protected using dependencies. Data access strictly scoped per user.
 *   **Database:**
     *   Uses SQLModel for ORM.
@@ -55,6 +58,7 @@ This project provides a backend API for managing personal finances, allowing use
 *   **Authentication:** JWT (PyJWT), Password Hashing (Passlib)
 *   **Scheduling:** APScheduler
 *   **Rate Limiting:** SlowAPI
+*   **AI Libraries:** OpenAI, Google GenerativeAI (placeholders for DeepSeek/Mistral)
 *   **Testing:** Pytest, Pytest-Asyncio, Pytest-Cov, HTTPX
 *   **Containerization:** Docker, Docker Compose
 *   **Language:** Python 3.10+

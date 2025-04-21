@@ -7,7 +7,8 @@ from dto.report_dto import MonthlyReport, CategorySummary
 from dto.user_dto import UserCreate, UserRead, UserPasswordUpdate # Add UserPasswordUpdate
 from dto.token_dto import Token, TokenPayload
 from dto.budget_dto import BudgetBase, BudgetCreate, BudgetRead
-from dto.recurring_transaction_dto import RecurringTransactionBase, RecurringTransactionCreate, RecurringTransactionRead # Add Recurring Tx DTOs
+from dto.recurring_transaction_dto import RecurringTransactionBase, RecurringTransactionCreate, RecurringTransactionRead
+from dto.ai_consultation_dto import AIConsultationRequest, AIConsultationResponse, AIModelProvider # Add AI DTOs
 # Add new report DTOs
 from dto.report_dto import MonthlyReport, YearlyReport, DateRangeReport, CategorySummary
 
