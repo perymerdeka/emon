@@ -35,6 +35,9 @@ This project provides a backend API for managing personal finances, allowing use
     *   Generate yearly financial summary (`GET /reports/yearly`).
     *   Generate custom date range summary (`GET /reports/custom`).
     *   Reports include totals and category breakdowns, scoped per user.
+*   **Notifications:** (Requires Authentication)
+    *   API endpoints (`/notifications/`) to retrieve notifications and mark them as read.
+    *   Notifications generated for events like recurring transaction creation (more triggers can be added).
 *   **AI Consultation:** (Requires Authentication)
     *   Endpoint (`POST /ai-consultation/`) to ask financial questions to supported AI providers (OpenAI, Gemini, etc.).
     *   *Note: Requires API keys to be configured via environment variables. Service logic is currently placeholder.*
@@ -98,7 +101,8 @@ This project provides a backend API for managing personal finances, allowing use
 │   ├── token_dto.py
 │   ├── transaction_dto.py
 │   ├── user_dto.py
-│   └── ai_consultation_dto.py # Added
+│   ├── ai_consultation_dto.py
+│   └── notification_dto.py # Added
 ├── middlewares/            # Custom middleware
 │   ├── __init__.py
 │   └── auth.py             # Authentication middleware & dependency
@@ -108,7 +112,8 @@ This project provides a backend API for managing personal finances, allowing use
 │   ├── category_model.py
 │   ├── recurring_transaction_model.py
 │   ├── transaction_model.py
-│   └── user_model.py
+│   ├── user_model.py
+│   └── notification_model.py # Added
 ├── routers/                # API endpoint routers
 │   ├── __init__.py
 │   ├── auth.py
@@ -117,7 +122,8 @@ This project provides a backend API for managing personal finances, allowing use
 │   ├── recurring_transactions.py
 │   ├── reports.py
 │   ├── transactions.py
-│   └── ai_consultation.py # Added
+│   ├── ai_consultation.py
+│   └── notifications.py # Added
 ├── services/               # Business logic services
 │   ├── __init__.py
 │   ├── recurring_transaction_service.py
@@ -220,6 +226,9 @@ This project provides a backend API for managing personal finances, allowing use
 *   **Recurring Transaction Generation Robustness:**
     *   Implement locking or idempotency checks in `generate_due_transactions` if multiple instances could run concurrently.
     *   Add more sophisticated error handling and potentially deactivate rules that consistently fail (e.g., due to deleted categories).
+*   **Notifications:**
+    *   Implement more notification triggers (budget warnings/exceeded, bill reminders).
+    *   Add delivery mechanisms (email, push notifications via services like Firebase Cloud Messaging).
 *   **Budget vs. Actual Reporting:** Enhance reports to show budget amounts alongside actual income/expenses for the period.
 *   **User Profile:** Add endpoint to update user details (e.g., email - requires verification flow).
 *   **Security Hardening:** Implement refresh token rotation, review input validation, consider security headers.

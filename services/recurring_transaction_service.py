@@ -3,9 +3,10 @@ from datetime import date, timedelta
 from sqlmodel import Session, select # Keep sync Session for type hint if needed
 from sqlmodel.ext.asyncio.session import AsyncSession # Import AsyncSession
 from dateutil.relativedelta import relativedelta
-from typing import Optional, List, Union, Any # Added Union, Any
+from typing import Optional, List, Union, Any
 
-from models import RecurringTransaction, Transaction, RecurrenceFrequency, Category, User
+# Import models including Notification
+from models import RecurringTransaction, Transaction, RecurrenceFrequency, Category, User, Notification, NotificationType
 # Import both session scopes and settings
 from core.db import sync_session_scope, async_session_scope
 from core.config import settings
@@ -91,6 +92,18 @@ async def generate_due_transactions(run_date: date = date.today()):
                 session.add(new_transaction)
                 created_count += 1
                 print(f"Created transaction for rule ID {rule.id} on date {next_due}")
+
+                # Create a notification for the user
+                notification_message = f"Recurring transaction '{rule.description}' of {rule.amount} generated for {next_due}."
+                new_notification = Notification(
+                    user_id=rule.owner_id,
+                    type=NotificationType.RECURRING_TX_GENERATED,
+                    message=notification_message,
+                    # Optional: Link notification to the generated transaction (requires flushing to get ID)
+                    # related_entity_id=new_transaction.id, # Need to flush first if ID is needed immediately
+                    # related_entity_type="transaction"
+                )
+                session.add(new_notification)
 
                 # Update the rule's last created date
                 rule.last_created_date = next_due

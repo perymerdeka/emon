@@ -6,7 +6,7 @@ from starlette.middleware.cors import CORSMiddleware # Optional: Add CORS if nee
 from contextlib import asynccontextmanager # Import for lifespan
 
 # Import individual routers directly
-from routers import auth, categories, reports, transactions, budgets, recurring_transactions, ai_consultation # Add ai_consultation
+from routers import auth, categories, reports, transactions, budgets, recurring_transactions, ai_consultation, notifications # Add notifications
 from middlewares.auth import AuthMiddleware # Import the auth middleware
 from core.config import settings # Import settings
 # from core.db import init_db # No longer needed if handled by Alembic
@@ -66,7 +66,8 @@ def create_app() -> FastAPI:
     app.include_router(reports.router, prefix="/reports", tags=["Reports"])
     app.include_router(budgets.router, prefix="/budgets", tags=["Budgets"])
     app.include_router(recurring_transactions.router, prefix="/recurring-transactions", tags=["Recurring Transactions"])
-    app.include_router(ai_consultation.router, prefix="/ai-consultation", tags=["AI Consultation"]) # Add AI router
+    app.include_router(ai_consultation.router, prefix="/ai-consultation", tags=["AI Consultation"])
+    app.include_router(notifications.router, prefix="/notifications", tags=["Notifications"]) # Add Notifications router
 
     # Add a simple root endpoint for health check or welcome message
     @app.get("/", tags=["Root"])
