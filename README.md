@@ -97,7 +97,8 @@ This project provides a backend API for managing personal finances, allowing use
 │   ├── report_dto.py
 │   ├── token_dto.py
 │   ├── transaction_dto.py
-│   └── user_dto.py
+│   ├── user_dto.py
+│   └── ai_consultation_dto.py # Added
 ├── middlewares/            # Custom middleware
 │   ├── __init__.py
 │   └── auth.py             # Authentication middleware & dependency
@@ -115,10 +116,12 @@ This project provides a backend API for managing personal finances, allowing use
 │   ├── categories.py
 │   ├── recurring_transactions.py
 │   ├── reports.py
-│   └── transactions.py
+│   ├── transactions.py
+│   └── ai_consultation.py # Added
 ├── services/               # Business logic services
 │   ├── __init__.py
-│   └── recurring_transaction_service.py
+│   ├── recurring_transaction_service.py
+│   └── ai_consultation_service.py # Added
 └── tests/                  # Unit and integration tests
     ├── __init__.py
     ├── conftest.py         # Pytest fixtures (test client, db session)
@@ -142,8 +145,9 @@ This project provides a backend API for managing personal finances, allowing use
     *   **`SECRET_KEY`:** Generate a strong secret key (e.g., `openssl rand -hex 32`) and replace the placeholder.
     *   **`DATABASE_URL`:** Choose your desired database URL (see examples in `.env.example`). Ensure the URL prefix matches sync/async drivers if you also set `USE_ASYNC_DB`.
     *   **`USE_ASYNC_DB` (Optional):** Set to `True` or `False` to explicitly control mode, overriding inference from `DATABASE_URL`.
+    *   **AI API Keys:** Set `OPENAI_API_KEY`, `GEMINI_API_KEY`, etc., for the AI providers you intend to use.
     *   **Database Service (If not SQLite):** If using PostgreSQL or MySQL, uncomment the corresponding service (`db_postgres` or `db_mysql`) and `volumes` section in `docker-compose.yml`. Update the database credentials in the `environment` section of the chosen service in `docker-compose.yml` to match your `DATABASE_URL`.
-4.  **Install Drivers (If not SQLite):** Uncomment the required database driver(s) (sync and/or async) in `requirements.txt`.
+4.  **Install Drivers (If not SQLite):** Uncomment the required database driver(s) (sync and/or async) in `requirements.txt`. Ensure AI libraries (`openai`, `google-generativeai`, etc.) are also installed or uncommented.
 5.  **Build and Run:**
     ```bash
     docker-compose up --build -d
@@ -168,10 +172,10 @@ This project provides a backend API for managing personal finances, allowing use
     ```bash
     pip install -r requirements.txt
     # Ensure necessary DB drivers (sync/async) and bcrypt support are installed
-    # e.g., pip install psycopg2-binary asyncpg bcrypt
+    # e.g., pip install psycopg2-binary asyncpg bcrypt openai google-generativeai
     ```
 4.  **Create `.env` file:** Copy `.env.example` to `.env`.
-5.  **Configure `.env`:** Set `SECRET_KEY` and `DATABASE_URL` (and optionally `USE_ASYNC_DB`).
+5.  **Configure `.env`:** Set `SECRET_KEY`, `DATABASE_URL`, AI API Keys (e.g., `OPENAI_API_KEY`), and optionally `USE_ASYNC_DB`.
 6.  **(Important)** If using SQLite and a `database.db` file exists from previous runs without Alembic, delete it.
 7.  **Apply Migrations:**
     ```bash
