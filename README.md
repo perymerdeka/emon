@@ -205,6 +205,273 @@ This project provides a backend API for managing personal finances, allowing use
 7.  **View Profile:** `GET /auth/users/me`
 8.  **Change Password:** `PUT /auth/users/me/password`
 
+## API Endpoints
+
+Below is a detailed list of available API endpoints.
+
+**Authentication (`/auth`)**
+
+*   **`POST /register`**
+    *   **Description:** Register a new user.
+    *   **Auth:** None
+    *   **Rate Limit:** Yes (e.g., 10/minute)
+    *   **Request Body:** `UserCreate` (email, password)
+        ```json
+        {
+          "email": "user@example.com",
+          "password": "yoursecurepassword"
+        }
+        ```
+    *   **Response:** `UserRead` (id, email, is_active)
+
+*   **`POST /token`**
+    *   **Description:** Authenticate user and return JWT tokens.
+    *   **Auth:** None
+    *   **Rate Limit:** Yes (e.g., 5/minute)
+    *   **Request Body:** Form data (`username`=email, `password`)
+    *   **Response:** `Token` (access_token, refresh_token, token_type)
+
+*   **`POST /refresh`**
+    *   **Description:** Exchange a refresh token for a new access token.
+    *   **Auth:** Requires valid Refresh Token in `Authorization: Bearer <refresh_token>` header.
+    *   **Response:** `Token` (new access_token, original refresh_token, token_type)
+
+*   **`GET /users/me`**
+    *   **Description:** Fetch the current logged-in user's profile.
+    *   **Auth:** Requires valid Access Token.
+    *   **Response:** `UserRead` (id, email, is_active)
+
+*   **`PUT /users/me/password`**
+    *   **Description:** Update the current logged-in user's password.
+    *   **Auth:** Requires valid Access Token.
+    *   **Request Body:** `UserPasswordUpdate` (current_password, new_password)
+        ```json
+        {
+          "current_password": "yourcurrentpassword",
+          "new_password": "yournewsecurepassword"
+        }
+        ```
+    *   **Response:** `204 No Content`
+
+**Categories (`/categories`)**
+
+*All endpoints require authentication (Access Token).*
+
+*   **`POST /`**
+    *   **Description:** Create a new category.
+    *   **Request Body:** `CategoryBase` (name, description, type: "INCOME" | "EXPENSE")
+        ```json
+        {
+          "name": "Salary",
+          "description": "Monthly income",
+          "type": "INCOME"
+        }
+        ```
+    *   **Response:** `CategoryRead` (id, name, description, type, owner_id)
+
+*   **`GET /`**
+    *   **Description:** Retrieve categories for the current user.
+    *   **Query Params:** `skip` (int, default 0), `limit` (int, default 100)
+    *   **Response:** `List[CategoryRead]`
+
+*   **`GET /{category_id}`**
+    *   **Description:** Retrieve a specific category by ID.
+    *   **Path Param:** `category_id` (int)
+    *   **Response:** `CategoryRead`
+
+*   **`PUT /{category_id}`**
+    *   **Description:** Update an existing category.
+    *   **Path Param:** `category_id` (int)
+    *   **Request Body:** `CategoryBase`
+    *   **Response:** `CategoryRead`
+
+*   **`DELETE /{category_id}`**
+    *   **Description:** Delete a category.
+    *   **Path Param:** `category_id` (int)
+    *   **Response:** `204 No Content`
+
+**Transactions (`/transactions`)**
+
+*All endpoints require authentication (Access Token).*
+
+*   **`POST /`**
+    *   **Description:** Create a new transaction.
+    *   **Request Body:** `TransactionBase` (date, amount, description, category_id)
+        ```json
+        {
+          "date": "2024-04-24",
+          "amount": 55.75,
+          "description": "Weekly groceries",
+          "category_id": 1
+        }
+        ```
+    *   **Response:** `TransactionRead` (id, date, amount, description, type, category_id, owner_id)
+
+*   **`GET /`**
+    *   **Description:** Retrieve transactions for the current user.
+    *   **Query Params:** `skip` (int, default 0), `limit` (int, default 100), `start_date` (date, optional), `end_date` (date, optional), `category_id` (int, optional)
+    *   **Response:** `List[TransactionReadWithCategory]` (includes category details)
+
+*   **`GET /{transaction_id}`**
+    *   **Description:** Retrieve a specific transaction by ID.
+    *   **Path Param:** `transaction_id` (int)
+    *   **Response:** `TransactionReadWithCategory`
+
+*   **`PUT /{transaction_id}`**
+    *   **Description:** Update an existing transaction.
+    *   **Path Param:** `transaction_id` (int)
+    *   **Request Body:** `TransactionBase`
+    *   **Response:** `TransactionRead`
+
+*   **`DELETE /{transaction_id}`**
+    *   **Description:** Delete a transaction.
+    *   **Path Param:** `transaction_id` (int)
+    *   **Response:** `204 No Content`
+
+**Reports (`/reports`)**
+
+*All endpoints require authentication (Access Token).*
+
+*   **`GET /monthly`**
+    *   **Description:** Generates a financial report for a specific month and year.
+    *   **Query Params:** `year` (int, required), `month` (int, required, 1-12)
+    *   **Response:** `MonthlyReport` (totals, net balance, category breakdowns)
+
+*   **`GET /yearly`**
+    *   **Description:** Generates a financial report for a specific year.
+    *   **Query Params:** `year` (int, required)
+    *   **Response:** `YearlyReport` (totals, net balance, category breakdowns)
+
+*   **`GET /custom`**
+    *   **Description:** Generates a financial report for a custom date range.
+    *   **Query Params:** `start_date` (date, required), `end_date` (date, required)
+    *   **Response:** `DateRangeReport` (totals, net balance, category breakdowns)
+
+**Budgets (`/budgets`)**
+
+*All endpoints require authentication (Access Token).*
+
+*   **`POST /`**
+    *   **Description:** Create a new budget for a specific month (and optionally category).
+    *   **Request Body:** `BudgetCreate` (year, month, amount, category_id: optional)
+        ```json
+        {
+          "year": 2024,
+          "month": 4,
+          "amount": 500.00,
+          "category_id": 1
+        }
+        ```
+    *   **Response:** `BudgetRead` (id, year, month, amount, category_id, owner_id)
+
+*   **`GET /`**
+    *   **Description:** Retrieve budgets for the current user.
+    *   **Query Params:** `skip` (int, default 0), `limit` (int, default 100), `year` (int, optional), `month` (int, optional), `category_id` (int, optional)
+    *   **Response:** `List[BudgetRead]`
+
+*   **`GET /{budget_id}`**
+    *   **Description:** Retrieve a specific budget by ID.
+    *   **Path Param:** `budget_id` (int)
+    *   **Response:** `BudgetRead`
+
+*   **`PUT /{budget_id}`**
+    *   **Description:** Update an existing budget.
+    *   **Path Param:** `budget_id` (int)
+    *   **Request Body:** `BudgetCreate`
+    *   **Response:** `BudgetRead`
+
+*   **`DELETE /{budget_id}`**
+    *   **Description:** Delete a budget.
+    *   **Path Param:** `budget_id` (int)
+    *   **Response:** `204 No Content`
+
+**Recurring Transactions (`/recurring-transactions`)**
+
+*All endpoints require authentication (Access Token).*
+
+*   **`POST /`**
+    *   **Description:** Create a new recurring transaction rule.
+    *   **Request Body:** `RecurringTransactionCreate` (description, amount, category_id, frequency, interval, start_date, end_date: optional, day_of_month: optional, day_of_week: optional, is_active: optional)
+        ```json
+        {
+          "description": "Monthly Subscription",
+          "amount": 15.00,
+          "category_id": 10,
+          "frequency": "MONTHLY",
+          "interval": 1,
+          "start_date": "2024-05-15",
+          "day_of_month": 15,
+          "is_active": true
+        }
+        ```
+    *   **Response:** `RecurringTransactionRead` (includes id, owner_id, last_created_date)
+
+*   **`GET /`**
+    *   **Description:** Retrieve recurring transaction rules for the current user.
+    *   **Query Params:** `skip` (int, default 0), `limit` (int, default 100), `is_active` (bool, optional)
+    *   **Response:** `List[RecurringTransactionRead]`
+
+*   **`GET /{recurring_tx_id}`**
+    *   **Description:** Retrieve a specific recurring transaction rule by ID.
+    *   **Path Param:** `recurring_tx_id` (int)
+    *   **Response:** `RecurringTransactionRead`
+
+*   **`PUT /{recurring_tx_id}`**
+    *   **Description:** Update an existing recurring transaction rule.
+    *   **Path Param:** `recurring_tx_id` (int)
+    *   **Request Body:** `RecurringTransactionCreate`
+    *   **Response:** `RecurringTransactionRead`
+
+*   **`DELETE /{recurring_tx_id}`**
+    *   **Description:** Delete a recurring transaction rule.
+    *   **Path Param:** `recurring_tx_id` (int)
+    *   **Response:** `204 No Content`
+
+*   **`POST /generate-due`**
+    *   **Description:** Manually triggers the generation of due recurring transactions (runs in background).
+    *   **Query Params:** `run_date_str` (str, optional, YYYY-MM-DD)
+    *   **Response:** `202 Accepted` with `{"message": "Recurring transaction generation task accepted."}`
+
+**AI Consultation (`/ai-consultation`)**
+
+*Requires authentication (Access Token).*
+
+*   **`POST /`**
+    *   **Description:** Ask financial questions to a selected AI provider.
+    *   **Request Body:** `AIConsultationRequest` (provider: "openai" | "gemini" | ..., query, financial_context: optional)
+        ```json
+        {
+          "provider": "openai",
+          "query": "What are some strategies to save more money?",
+          "financial_context": "Optional summary"
+        }
+        ```
+    *   **Response:** `AIConsultationResponse` (provider, query, response)
+
+**Notifications (`/notifications`)**
+
+*All endpoints require authentication (Access Token).*
+
+*   **`GET /`**
+    *   **Description:** Retrieve notifications for the current user.
+    *   **Query Params:** `skip` (int, default 0), `limit` (int, default 100, max 200), `is_read` (bool, optional)
+    *   **Response:** `List[NotificationRead]` (id, user_id, message, is_read, created_at)
+
+*   **`PATCH /{notification_id}`**
+    *   **Description:** Mark a specific notification as read or unread.
+    *   **Path Param:** `notification_id` (int)
+    *   **Request Body:** `NotificationUpdate` (is_read: bool)
+        ```json
+        {
+          "is_read": true
+        }
+        ```
+    *   **Response:** `NotificationRead`
+
+*   **`POST /mark-all-read`**
+    *   **Description:** Mark all unread notifications for the current user as read.
+    *   **Response:** `204 No Content`
+
 ## Testing
 
 1.  **Prerequisites:** Install test dependencies (`pytest`, `pytest-asyncio`, `pytest-cov`, `httpx` - included in `requirements.txt`).

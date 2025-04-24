@@ -1,0 +1,1370 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-1234-abcdef123456",
+		"name": "Emon Personal Finance API",
+		"description": "Postman collection for the Emon Personal Finance API.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Root",
+			"item": [
+				{
+					"name": "Read Root",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								""
+							]
+						},
+						"description": "Simple root endpoint for health check or welcome message."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"yoursecurepassword\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new user."
+					},
+					"response": []
+				},
+				{
+					"name": "Login for Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "username",
+									"value": "user@example.com",
+									"type": "text",
+									"description": "User's email address"
+								},
+								{
+									"key": "password",
+									"value": "yoursecurepassword",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/token",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"token"
+							]
+						},
+						"description": "Authenticate user (using email as username) and return JWT access and refresh tokens."
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{refreshToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/refresh",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						},
+						"description": "Exchange a valid refresh token (sent as Bearer token) for a new access token and the same refresh token. Store the original refresh token in a Postman variable named `refreshToken`."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current User Info",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/users/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"users",
+								"me"
+							]
+						},
+						"description": "Fetch the current logged-in user's profile information."
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Password",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"current_password\": \"yourcurrentpassword\",\n  \"new_password\": \"yournewsecurepassword\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/users/me/password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"users",
+								"me",
+								"password"
+							]
+						},
+						"description": "Update the current logged-in user's password."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints related to user authentication and profile management."
+		},
+		{
+			"name": "Categories",
+			"item": [
+				{
+					"name": "Create Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Groceries\",\n  \"description\": \"Monthly grocery shopping\",\n  \"type\": \"EXPENSE\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/categories/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories",
+								""
+							]
+						},
+						"description": "Create a new category (INCOME or EXPENSE)."
+					},
+					"response": []
+				},
+				{
+					"name": "Read Categories",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/categories/?skip=0&limit=100",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories",
+								""
+							],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						},
+						"description": "Retrieve categories for the current user."
+					},
+					"response": []
+				},
+				{
+					"name": "Read Category by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/categories/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories",
+								"1"
+							]
+						},
+						"description": "Retrieve a specific category by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Groceries\",\n  \"description\": \"Updated description\",\n  \"type\": \"EXPENSE\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/categories/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories",
+								"1"
+							]
+						},
+						"description": "Update an existing category."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/categories/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories",
+								"1"
+							]
+						},
+						"description": "Delete a category."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing income/expense categories."
+		},
+		{
+			"name": "Transactions",
+			"item": [
+				{
+					"name": "Create Transaction",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"date\": \"2024-04-24\",\n  \"amount\": 55.75,\n  \"description\": \"Weekly groceries\",\n  \"category_id\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								""
+							]
+						},
+						"description": "Create a new transaction."
+					},
+					"response": []
+				},
+				{
+					"name": "Read Transactions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/transactions/?skip=0&limit=100&start_date=2024-04-01&end_date=2024-04-30&category_id=1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								""
+							],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "100",
+									"disabled": true
+								},
+								{
+									"key": "start_date",
+									"value": "2024-04-01",
+									"description": "(Optional) Filter by start date (YYYY-MM-DD)",
+									"disabled": true
+								},
+								{
+									"key": "end_date",
+									"value": "2024-04-30",
+									"description": "(Optional) Filter by end date (YYYY-MM-DD)",
+									"disabled": true
+								},
+								{
+									"key": "category_id",
+									"value": "1",
+									"description": "(Optional) Filter by category ID",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retrieve transactions for the current user, with optional filters."
+					},
+					"response": []
+				},
+				{
+					"name": "Read Transaction by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/transactions/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"1"
+							]
+						},
+						"description": "Retrieve a specific transaction by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Transaction",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"date\": \"2024-04-25\",\n  \"amount\": 60.00,\n  \"description\": \"Updated groceries\",\n  \"category_id\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"1"
+							]
+						},
+						"description": "Update an existing transaction."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Transaction",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/transactions/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"1"
+							]
+						},
+						"description": "Delete a transaction."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing individual transactions."
+		},
+		{
+			"name": "Reports",
+			"item": [
+				{
+					"name": "Get Monthly Report",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/reports/monthly?year=2024&month=4",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"reports",
+								"monthly"
+							],
+							"query": [
+								{
+									"key": "year",
+									"value": "2024",
+									"description": "Year of the report (e.g., 2024)"
+								},
+								{
+									"key": "month",
+									"value": "4",
+									"description": "Month of the report (1-12)"
+								}
+							]
+						},
+						"description": "Generates a financial report for a specific month and year."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Yearly Report",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/reports/yearly?year=2024",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"reports",
+								"yearly"
+							],
+							"query": [
+								{
+									"key": "year",
+									"value": "2024",
+									"description": "Year of the report (e.g., 2024)"
+								}
+							]
+						},
+						"description": "Generates a financial report for a specific year."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Custom Range Report",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/reports/custom?start_date=2024-04-01&end_date=2024-04-24",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"reports",
+								"custom"
+							],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "2024-04-01",
+									"description": "Start date (YYYY-MM-DD)"
+								},
+								{
+									"key": "end_date",
+									"value": "2024-04-24",
+									"description": "End date (YYYY-MM-DD)"
+								}
+							]
+						},
+						"description": "Generates a financial report for a custom date range."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for generating financial reports."
+		},
+		{
+			"name": "Budgets",
+			"item": [
+				{
+					"name": "Create Budget",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"year\": 2024,\n  \"month\": 4,\n  \"amount\": 500.00,\n  \"category_id\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/budgets/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"budgets",
+								""
+							]
+						},
+						"description": "Create a new budget for a specific month (and optionally category)."
+					},
+					"response": []
+				},
+				{
+					"name": "Read Budgets",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/budgets/?year=2024&month=4&category_id=1&skip=0&limit=100",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"budgets",
+								""
+							],
+							"query": [
+								{
+									"key": "year",
+									"value": "2024",
+									"description": "(Optional) Filter by year",
+									"disabled": true
+								},
+								{
+									"key": "month",
+									"value": "4",
+									"description": "(Optional) Filter by month (1-12)",
+									"disabled": true
+								},
+								{
+									"key": "category_id",
+									"value": "1",
+									"description": "(Optional) Filter by category ID",
+									"disabled": true
+								},
+								{
+									"key": "skip",
+									"value": "0",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "100",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retrieve budgets for the current user, optionally filtered."
+					},
+					"response": []
+				},
+				{
+					"name": "Read Budget by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/budgets/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"budgets",
+								"1"
+							]
+						},
+						"description": "Retrieve a specific budget by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Budget",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"year\": 2024,\n  \"month\": 4,\n  \"amount\": 550.00,\n  \"category_id\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/budgets/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"budgets",
+								"1"
+							]
+						},
+						"description": "Update an existing budget."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Budget",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/budgets/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"budgets",
+								"1"
+							]
+						},
+						"description": "Delete a budget."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing monthly budgets."
+		},
+		{
+			"name": "Recurring Transactions",
+			"item": [
+				{
+					"name": "Create Recurring Transaction Rule",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"Monthly Rent\",\n  \"amount\": 1200.00,\n  \"category_id\": 5, \n  \"frequency\": \"MONTHLY\",\n  \"interval\": 1,\n  \"start_date\": \"2024-05-01\",\n  \"day_of_month\": 1,\n  \"is_active\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/recurring-transactions/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"recurring-transactions",
+								""
+							]
+						},
+						"description": "Create a new recurring transaction rule (e.g., monthly rent, weekly subscription)."
+					},
+					"response": []
+				},
+				{
+					"name": "Read Recurring Transaction Rules",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/recurring-transactions/?skip=0&limit=100&is_active=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"recurring-transactions",
+								""
+							],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "100",
+									"disabled": true
+								},
+								{
+									"key": "is_active",
+									"value": "true",
+									"description": "(Optional) Filter by active status (true/false)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retrieve recurring transaction rules for the current user."
+					},
+					"response": []
+				},
+				{
+					"name": "Read Recurring Transaction Rule by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/recurring-transactions/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"recurring-transactions",
+								"1"
+							]
+						},
+						"description": "Retrieve a specific recurring transaction rule by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Recurring Transaction Rule",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"Monthly Rent (Updated)\",\n  \"amount\": 1250.00,\n  \"category_id\": 5, \n  \"frequency\": \"MONTHLY\",\n  \"interval\": 1,\n  \"start_date\": \"2024-05-01\",\n  \"day_of_month\": 1,\n  \"is_active\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/recurring-transactions/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"recurring-transactions",
+								"1"
+							]
+						},
+						"description": "Update an existing recurring transaction rule."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Recurring Transaction Rule",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/recurring-transactions/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"recurring-transactions",
+								"1"
+							]
+						},
+						"description": "Delete a recurring transaction rule (does not delete already generated transactions)."
+					},
+					"response": []
+				},
+				{
+					"name": "Manually Generate Due Transactions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/recurring-transactions/generate-due?run_date_str=2024-04-24",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"recurring-transactions",
+								"generate-due"
+							],
+							"query": [
+								{
+									"key": "run_date_str",
+									"value": "2024-04-24",
+									"description": "(Optional) Date (YYYY-MM-DD) to run generation for, defaults to today",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Manually triggers the generation of due recurring transactions. Runs as a background task."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing recurring transaction rules and generation."
+		},
+		{
+			"name": "AI Consultation",
+			"item": [
+				{
+					"name": "Consult AI",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"provider\": \"openai\",\n  \"query\": \"Should I invest more in stocks or bonds right now?\",\n  \"financial_context\": \"Optional: Provide summary of user's financial situation\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ai-consultation/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ai-consultation",
+								""
+							]
+						},
+						"description": "Endpoint for users to ask financial questions to a selected AI provider."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for interacting with AI financial advisors."
+		},
+		{
+			"name": "Notifications",
+			"item": [
+				{
+					"name": "Read Notifications",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/?skip=0&limit=50&is_read=false",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications",
+								""
+							],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "50",
+									"disabled": true
+								},
+								{
+									"key": "is_read",
+									"value": "false",
+									"description": "(Optional) Filter by read status (true/false)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retrieve notifications for the current user, optionally filtered by read status."
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Notification As Read/Unread",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"is_read\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/notifications/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications",
+								"1"
+							]
+						},
+						"description": "Mark a specific notification as read or unread."
+					},
+					"response": []
+				},
+				{
+					"name": "Mark All Notifications As Read",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/mark-all-read",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications",
+								"mark-all-read"
+							]
+						},
+						"description": "Mark all unread notifications for the current user as read."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing user notifications."
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000",
+			"type": "string",
+			"description": "Base URL for the API"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string",
+			"description": "JWT Access Token obtained from /auth/token"
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "string",
+			"description": "JWT Refresh Token obtained from /auth/token"
+		}
+	]
+}
