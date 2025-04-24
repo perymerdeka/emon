@@ -7,7 +7,7 @@ from typing import Union # For type hint
 from datetime import date
 
 from models import Budget, Category # Import models
-from dto import CategoryType # Import enum
+from models.category_model import CategoryType # Import enum from correct location
 from core.config import settings # Import settings
 
 # Use fixtures defined in conftest.py
@@ -23,22 +23,22 @@ user2_pw_bud = "pw2_bud"
 DbSession = Union[Session, AsyncSession]
 
 # --- Fixtures ---
-@pytest_asyncio.fixture(scope="module") # Change to async fixture
+@pytest_asyncio.fixture(scope="function") # Change scope to function
 async def user1_bud_headers(client: TestClient) -> dict: # Make async
     """Fixture to get auth headers for user1 specific to budget tests."""
-    await client.post("/auth/register", json={"email": user1_email_bud, "password": user1_pw_bud}) # Use await
+    client.post("/auth/register", json={"email": user1_email_bud, "password": user1_pw_bud}) # REMOVE await
     login_data = {"username": user1_email_bud, "password": user1_pw_bud}
-    response = await client.post("/auth/token", data=login_data) # Use await
+    response = client.post("/auth/token", data=login_data) # REMOVE await
     tokens = response.json()
     access_token = tokens["access_token"]
     return {"Authorization": f"Bearer {access_token}"}
 
-@pytest_asyncio.fixture(scope="module") # Change to async fixture
+@pytest_asyncio.fixture(scope="function") # Change scope to function
 async def user2_bud_headers(client: TestClient) -> dict: # Make async
     """Fixture to get auth headers for user2 specific to budget tests."""
-    await client.post("/auth/register", json={"email": user2_email_bud, "password": user2_pw_bud}) # Use await
+    client.post("/auth/register", json={"email": user2_email_bud, "password": user2_pw_bud}) # REMOVE await
     login_data = {"username": user2_email_bud, "password": user2_pw_bud}
-    response = await client.post("/auth/token", data=login_data) # Use await
+    response = client.post("/auth/token", data=login_data) # REMOVE await
     tokens = response.json()
     access_token = tokens["access_token"]
     return {"Authorization": f"Bearer {access_token}"}
@@ -47,7 +47,7 @@ async def user2_bud_headers(client: TestClient) -> dict: # Make async
 async def user1_bud_categories(client: TestClient, user1_bud_headers: dict) -> dict: # Make async
     """Fixture to create some categories for user1 for budget tests."""
     expense_data = {"name": "Groceries_B", "type": CategoryType.EXPENSE}
-    resp_expense = await client.post("/categories/", headers=user1_bud_headers, json=expense_data) # Use await
+    resp_expense = client.post("/categories/", headers=user1_bud_headers, json=expense_data) # REMOVE await
     assert resp_expense.status_code == 201
     return {"expense_id": resp_expense.json()["id"]}
 
@@ -57,14 +57,14 @@ async def user1_bud_categories(client: TestClient, user1_bud_headers: dict) -> d
 async def test_create_budget_unauthenticated(client: TestClient): # Mark async
     """Test creating budget without authentication fails."""
     budget_data = {"year": 2024, "month": 1, "amount": 500}
-    response = await client.post("/budgets/", json=budget_data) # Use await
+    response = client.post("/budgets/", json=budget_data) # REMOVE await
     assert response.status_code == 401
 
 @pytest.mark.asyncio
 async def test_create_overall_budget(client: TestClient, user1_bud_headers: dict): # Mark async
     """Test creating a valid overall monthly budget."""
     budget_data = {"year": 2024, "month": 5, "amount": 1000.0}
-    response = await client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # Use await
+    response = client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # REMOVE await
     assert response.status_code == 201
     data = response.json()
     assert data["year"] == budget_data["year"]
@@ -82,7 +82,7 @@ async def test_create_category_budget(client: TestClient, user1_bud_headers: dic
         "amount": 250.0,
         "category_id": user1_bud_categories["expense_id"]
     }
-    response = await client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # Use await
+    response = client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # REMOVE await
     assert response.status_code == 201
     data = response.json()
     assert data["year"] == budget_data["year"]
@@ -95,18 +95,18 @@ async def test_create_budget_duplicate(client: TestClient, user1_bud_headers: di
     """Test creating a duplicate budget (same user, year, month, category)."""
     budget_data = {"year": 2024, "month": 7, "amount": 100, "category_id": user1_bud_categories["expense_id"]}
     # Create first time
-    response1 = await client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # Use await
+    response1 = client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # REMOVE await
     assert response1.status_code == 201
     # Attempt to create again
-    response2 = await client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # Use await
+    response2 = client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # REMOVE await
     assert response2.status_code == 400
     assert "already exists" in response2.json()["detail"]
 
     # Test duplicate overall budget
     budget_data_overall = {"year": 2024, "month": 8, "amount": 500}
-    response3 = await client.post("/budgets/", headers=user1_bud_headers, json=budget_data_overall) # Use await
+    response3 = client.post("/budgets/", headers=user1_bud_headers, json=budget_data_overall) # REMOVE await
     assert response3.status_code == 201
-    response4 = await client.post("/budgets/", headers=user1_bud_headers, json=budget_data_overall) # Use await
+    response4 = client.post("/budgets/", headers=user1_bud_headers, json=budget_data_overall) # REMOVE await
     assert response4.status_code == 400
     assert "already exists" in response4.json()["detail"]
 
@@ -114,7 +114,7 @@ async def test_create_budget_duplicate(client: TestClient, user1_bud_headers: di
 async def test_create_budget_invalid_category(client: TestClient, user1_bud_headers: dict): # Mark async
     """Test creating budget with non-existent category."""
     budget_data = {"year": 2024, "month": 9, "amount": 50, "category_id": 99999}
-    response = await client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # Use await
+    response = client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # REMOVE await
     assert response.status_code == 404
 
 @pytest.mark.asyncio
@@ -124,40 +124,40 @@ async def test_create_budget_wrong_user_category( # Mark async
     """Test creating budget using another user's category."""
     # User 2 creates category
     cat_data = {"name": "User2 Budget Cat", "type": CategoryType.EXPENSE}
-    resp_cat = await client.post("/categories/", headers=user2_bud_headers, json=cat_data) # Use await
+    resp_cat = client.post("/categories/", headers=user2_bud_headers, json=cat_data) # REMOVE await
     user2_cat_id = resp_cat.json()["id"]
 
     # User 1 tries to create budget with User 2's category
     budget_data = {"year": 2024, "month": 10, "amount": 100, "category_id": user2_cat_id}
-    response = await client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # Use await
+    response = client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # REMOVE await
     assert response.status_code == 404 # Category not found for user 1
 
 @pytest.mark.asyncio
 async def test_read_budgets(client: TestClient, user1_bud_headers: dict, user1_bud_categories: dict): # Mark async
     """Test reading budgets with filtering."""
     # Create budgets for different periods/categories
-    await client.post("/budgets/", headers=user1_bud_headers, json={"year": 2024, "month": 1, "amount": 1000}) # Use await
-    await client.post("/budgets/", headers=user1_bud_headers, json={"year": 2024, "month": 1, "amount": 200, "category_id": user1_bud_categories["expense_id"]}) # Use await
-    await client.post("/budgets/", headers=user1_bud_headers, json={"year": 2024, "month": 2, "amount": 1100}) # Use await
-    await client.post("/budgets/", headers=user1_bud_headers, json={"year": 2025, "month": 1, "amount": 1200}) # Use await
+    client.post("/budgets/", headers=user1_bud_headers, json={"year": 2024, "month": 1, "amount": 1000}) # REMOVE await
+    client.post("/budgets/", headers=user1_bud_headers, json={"year": 2024, "month": 1, "amount": 200, "category_id": user1_bud_categories["expense_id"]}) # REMOVE await
+    client.post("/budgets/", headers=user1_bud_headers, json={"year": 2024, "month": 2, "amount": 1100}) # REMOVE await
+    client.post("/budgets/", headers=user1_bud_headers, json={"year": 2025, "month": 1, "amount": 1200}) # REMOVE await
 
     # Read all for user
-    resp_all = await client.get("/budgets/", headers=user1_bud_headers) # Use await
+    resp_all = client.get("/budgets/", headers=user1_bud_headers) # REMOVE await
     assert resp_all.status_code == 200
     assert len(resp_all.json()) == 4
 
     # Filter by year
-    resp_year = await client.get("/budgets/?year=2024", headers=user1_bud_headers) # Use await
+    resp_year = client.get("/budgets/?year=2024", headers=user1_bud_headers) # REMOVE await
     assert resp_year.status_code == 200
     assert len(resp_year.json()) == 3
 
     # Filter by year and month
-    resp_ym = await client.get("/budgets/?year=2024&month=1", headers=user1_bud_headers) # Use await
+    resp_ym = client.get("/budgets/?year=2024&month=1", headers=user1_bud_headers) # REMOVE await
     assert resp_ym.status_code == 200
     assert len(resp_ym.json()) == 2
 
     # Filter by category
-    resp_cat = await client.get(f"/budgets/?category_id={user1_bud_categories['expense_id']}", headers=user1_bud_headers) # Use await
+    resp_cat = client.get(f"/budgets/?category_id={user1_bud_categories['expense_id']}", headers=user1_bud_headers) # REMOVE await
     assert resp_cat.status_code == 200
     assert len(resp_cat.json()) == 1
     assert resp_cat.json()[0]["amount"] == 200
@@ -168,9 +168,9 @@ async def test_read_budgets_wrong_user( # Mark async
 ):
     """Test reading budgets only returns budgets for the authenticated user."""
     # User 1 creates budget
-    await client.post("/budgets/", headers=user1_bud_headers, json={"year": 2024, "month": 3, "amount": 300}) # Use await
+    client.post("/budgets/", headers=user1_bud_headers, json={"year": 2024, "month": 3, "amount": 300}) # REMOVE await
     # User 2 reads budgets
-    resp_u2 = await client.get("/budgets/", headers=user2_bud_headers) # Use await
+    resp_u2 = client.get("/budgets/", headers=user2_bud_headers) # REMOVE await
     assert resp_u2.status_code == 200
     assert len(resp_u2.json()) == 0 # Should see none of user 1's budgets
 
@@ -178,10 +178,10 @@ async def test_read_budgets_wrong_user( # Mark async
 async def test_read_budget_by_id(client: TestClient, user1_bud_headers: dict): # Mark async
     """Test reading a specific budget by ID."""
     budget_data = {"year": 2025, "month": 1, "amount": 1500}
-    resp_create = await client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # Use await
+    resp_create = client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # REMOVE await
     budget_id = resp_create.json()["id"]
 
-    resp_read = await client.get(f"/budgets/{budget_id}", headers=user1_bud_headers) # Use await
+    resp_read = client.get(f"/budgets/{budget_id}", headers=user1_bud_headers) # REMOVE await
     assert resp_read.status_code == 200
     assert resp_read.json()["id"] == budget_id
     assert resp_read.json()["amount"] == 1500
@@ -190,10 +190,10 @@ async def test_read_budget_by_id(client: TestClient, user1_bud_headers: dict): #
 async def test_read_budget_by_id_wrong_user(client: TestClient, user1_bud_headers: dict, user2_bud_headers: dict): # Mark async
     """Test reading another user's budget by ID fails."""
     budget_data = {"year": 2025, "month": 2, "amount": 500}
-    resp_create = await client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # Use await
+    resp_create = client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # REMOVE await
     budget_id = resp_create.json()["id"]
 
-    resp_read = await client.get(f"/budgets/{budget_id}", headers=user2_bud_headers) # Use await
+    resp_read = client.get(f"/budgets/{budget_id}", headers=user2_bud_headers) # REMOVE await
     assert resp_read.status_code == 404
 
 @pytest.mark.asyncio
@@ -201,7 +201,7 @@ async def test_update_budget(client: TestClient, user1_bud_headers: dict, user1_
     """Test updating a budget's amount and category."""
     # Create initial overall budget
     budget_data = {"year": 2025, "month": 3, "amount": 800}
-    resp_create = await client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # Use await
+    resp_create = client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # REMOVE await
     budget_id = resp_create.json()["id"]
 
     # Update amount and add category
@@ -211,7 +211,7 @@ async def test_update_budget(client: TestClient, user1_bud_headers: dict, user1_
         "amount": 850.50,
         "category_id": user1_bud_categories["expense_id"]
     }
-    resp_update = await client.put(f"/budgets/{budget_id}", headers=user1_bud_headers, json=update_data) # Use await
+    resp_update = client.put(f"/budgets/{budget_id}", headers=user1_bud_headers, json=update_data) # REMOVE await
     assert resp_update.status_code == 200
     updated_data = resp_update.json()
     assert updated_data["amount"] == 850.50
@@ -230,25 +230,25 @@ async def test_update_budget(client: TestClient, user1_bud_headers: dict, user1_
 async def test_update_budget_wrong_user(client: TestClient, user1_bud_headers: dict, user2_bud_headers: dict): # Mark async
     """Test updating another user's budget fails."""
     budget_data = {"year": 2025, "month": 4, "amount": 400}
-    resp_create = await client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # Use await
+    resp_create = client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # REMOVE await
     budget_id = resp_create.json()["id"]
 
     update_data = {"year": 2025, "month": 4, "amount": 450}
-    resp_update = await client.put(f"/budgets/{budget_id}", headers=user2_bud_headers, json=update_data) # Use await
+    resp_update = client.put(f"/budgets/{budget_id}", headers=user2_bud_headers, json=update_data) # REMOVE await
     assert resp_update.status_code == 404
 
 @pytest.mark.asyncio
 async def test_update_budget_duplicate_period(client: TestClient, user1_bud_headers: dict, user1_bud_categories: dict): # Mark async
     """Test updating a budget to a period/category that already has a budget."""
     # Budget 1: Overall Jan 2025
-    await client.post("/budgets/", headers=user1_bud_headers, json={"year": 2025, "month": 1, "amount": 1000}) # Use await
+    client.post("/budgets/", headers=user1_bud_headers, json={"year": 2025, "month": 1, "amount": 1000}) # REMOVE await
     # Budget 2: Category Jan 2025
-    resp_cat = await client.post("/budgets/", headers=user1_bud_headers, json={"year": 2025, "month": 1, "amount": 200, "category_id": user1_bud_categories["expense_id"]}) # Use await
+    resp_cat = client.post("/budgets/", headers=user1_bud_headers, json={"year": 2025, "month": 1, "amount": 200, "category_id": user1_bud_categories["expense_id"]}) # REMOVE await
     budget2_id = resp_cat.json()["id"]
 
     # Try updating Budget 2 to be an overall budget for Jan 2025 (conflict with Budget 1)
     update_data = {"year": 2025, "month": 1, "amount": 250, "category_id": None}
-    resp_update = await client.put(f"/budgets/{budget2_id}", headers=user1_bud_headers, json=update_data) # Use await
+    resp_update = client.put(f"/budgets/{budget2_id}", headers=user1_bud_headers, json=update_data) # REMOVE await
     assert resp_update.status_code == 400
     assert "already exists" in resp_update.json()["detail"]
 
@@ -256,7 +256,7 @@ async def test_update_budget_duplicate_period(client: TestClient, user1_bud_head
 async def test_delete_budget(client: TestClient, user1_bud_headers: dict, session: DbSession): # Mark async, use DbSession
     """Test deleting a budget."""
     budget_data = {"year": 2025, "month": 5, "amount": 500}
-    resp_create = await client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # Use await
+    resp_create = client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # REMOVE await
     budget_id = resp_create.json()["id"]
 
     # Verify exists
@@ -267,7 +267,7 @@ async def test_delete_budget(client: TestClient, user1_bud_headers: dict, sessio
 
 
     # Delete
-    resp_delete = await client.delete(f"/budgets/{budget_id}", headers=user1_bud_headers) # Use await
+    resp_delete = client.delete(f"/budgets/{budget_id}", headers=user1_bud_headers) # REMOVE await
     assert resp_delete.status_code == 204
 
     # Verify deleted
@@ -283,8 +283,8 @@ async def test_delete_budget(client: TestClient, user1_bud_headers: dict, sessio
 async def test_delete_budget_wrong_user(client: TestClient, user1_bud_headers: dict, user2_bud_headers: dict): # Mark async
     """Test deleting another user's budget fails."""
     budget_data = {"year": 2025, "month": 6, "amount": 600}
-    resp_create = await client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # Use await
+    resp_create = client.post("/budgets/", headers=user1_bud_headers, json=budget_data) # REMOVE await
     budget_id = resp_create.json()["id"]
 
-    resp_delete = await client.delete(f"/budgets/{budget_id}", headers=user2_bud_headers) # Use await
+    resp_delete = client.delete(f"/budgets/{budget_id}", headers=user2_bud_headers) # REMOVE await
     assert resp_delete.status_code == 404

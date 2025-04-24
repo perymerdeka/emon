@@ -39,13 +39,21 @@ test_async_engine = create_async_engine(
 )
 
 # Fixture to create/drop tables for each test function
-# This needs to use the SYNC engine as create_all/drop_all are sync operations
-@pytest.fixture(scope="function", autouse=True)
-def setup_test_database():
-    """Creates database tables before each test function using sync engine."""
-    SQLModel.metadata.create_all(test_sync_engine)
-    yield
-    SQLModel.metadata.drop_all(test_sync_engine)
+# Needs to be async if using async engine
+@pytest_asyncio.fixture(scope="function", autouse=True)
+async def setup_test_database():
+    """Creates database tables before each test function using the appropriate engine."""
+    if settings.USE_ASYNC_DB:
+        async with test_async_engine.begin() as conn:
+            await conn.run_sync(SQLModel.metadata.create_all)
+        yield
+        async with test_async_engine.begin() as conn:
+            await conn.run_sync(SQLModel.metadata.drop_all)
+    else:
+        # Keep original sync logic if not using async DB
+        SQLModel.metadata.create_all(test_sync_engine)
+        yield
+        SQLModel.metadata.drop_all(test_sync_engine)
 
 # Fixture to provide the correct session type based on settings
 # Use pytest_asyncio.fixture for async fixtures
@@ -83,8 +91,9 @@ def app(session: Union[Session, AsyncSession]) -> FastAPI:
 
 # Fixture to provide an HTTP test client
 # Needs to be function-scoped because the app fixture is function-scoped
+# Make it depend on setup_test_database to ensure tables exist first
 @pytest.fixture(scope="function")
-def client(app: FastAPI) -> Generator[TestClient, None, None]:
+def client(app: FastAPI, setup_test_database: Any) -> Generator[TestClient, None, None]:
     """Provides a FastAPI TestClient."""
     with TestClient(app) as client_:
         yield client_

@@ -7,7 +7,7 @@ from typing import Union # For type hint
 from datetime import date, timedelta
 
 from models import RecurringTransaction, Transaction, Category, RecurrenceFrequency # Import models
-from dto import CategoryType # Import enum
+from models.category_model import CategoryType # Import enum from correct location
 from core.config import settings # Import settings
 # Import the service function to test its effect
 from services.recurring_transaction_service import generate_due_transactions
@@ -19,12 +19,12 @@ user1_pw_rec = "pw1_rec"
 # Type hint for the session fixture result
 DbSession = Union[Session, AsyncSession]
 
-@pytest_asyncio.fixture(scope="module") # Change to async fixture
+@pytest_asyncio.fixture(scope="function") # Change scope to function
 async def user1_rec_headers(client: TestClient) -> dict: # Make async
     """Fixture to get auth headers for user1 specific to recurring tests."""
-    await client.post("/auth/register", json={"email": user1_email_rec, "password": user1_pw_rec}) # Use await
+    client.post("/auth/register", json={"email": user1_email_rec, "password": user1_pw_rec}) # REMOVE await
     login_data = {"username": user1_email_rec, "password": user1_pw_rec}
-    response = await client.post("/auth/token", data=login_data) # Use await
+    response = client.post("/auth/token", data=login_data) # REMOVE await
     tokens = response.json()
     access_token = tokens["access_token"]
     return {"Authorization": f"Bearer {access_token}"}
@@ -34,8 +34,8 @@ async def user1_rec_categories(client: TestClient, user1_rec_headers: dict) -> d
     """Fixture to create categories for user1 for recurring tests."""
     income_data = {"name": "Salary_Rec", "type": CategoryType.INCOME}
     expense_data = {"name": "Rent_Rec", "type": CategoryType.EXPENSE}
-    resp_income = await client.post("/categories/", headers=user1_rec_headers, json=income_data) # Use await
-    resp_expense = await client.post("/categories/", headers=user1_rec_headers, json=expense_data) # Use await
+    resp_income = client.post("/categories/", headers=user1_rec_headers, json=income_data) # REMOVE await
+    resp_expense = client.post("/categories/", headers=user1_rec_headers, json=expense_data) # REMOVE await
     assert resp_income.status_code == 201
     assert resp_expense.status_code == 201
     return {
@@ -57,7 +57,7 @@ async def test_create_recurring_transaction(client: TestClient, user1_rec_header
         "category_id": user1_rec_categories["expense_id"],
         "is_active": True
     }
-    response = await client.post("/recurring-transactions/", headers=user1_rec_headers, json=rec_data) # Use await
+    response = client.post("/recurring-transactions/", headers=user1_rec_headers, json=rec_data) # REMOVE await
     assert response.status_code == 201
     data = response.json()
     assert data["description"] == rec_data["description"]
@@ -73,9 +73,9 @@ async def test_read_recurring_transactions(client: TestClient, user1_rec_headers
     # Create a rule first
     start_date = date.today()
     rec_data = {"description": "Weekly Allowance", "amount": 20, "start_date": str(start_date), "frequency": RecurrenceFrequency.WEEKLY, "category_id": user1_rec_categories["expense_id"]}
-    await client.post("/recurring-transactions/", headers=user1_rec_headers, json=rec_data) # Use await
+    client.post("/recurring-transactions/", headers=user1_rec_headers, json=rec_data) # REMOVE await
 
-    response = await client.get("/recurring-transactions/", headers=user1_rec_headers) # Use await
+    response = client.get("/recurring-transactions/", headers=user1_rec_headers) # REMOVE await
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
@@ -99,12 +99,12 @@ async def test_generate_due_transactions_monthly(client: TestClient, user1_rec_h
         "frequency": RecurrenceFrequency.MONTHLY,
         "category_id": user1_rec_categories["expense_id"],
     }
-    resp_create = await client.post("/recurring-transactions/", headers=user1_rec_headers, json=rec_data) # Use await
+    resp_create = client.post("/recurring-transactions/", headers=user1_rec_headers, json=rec_data) # REMOVE await
     assert resp_create.status_code == 201
     rule_id = resp_create.json()["id"]
 
     # Trigger generation for today
-    resp_gen = await client.post("/recurring-transactions/generate-due", headers=user1_rec_headers) # Use await
+    resp_gen = client.post("/recurring-transactions/generate-due", headers=user1_rec_headers) # REMOVE await
     assert resp_gen.status_code == 202 # Accepted
 
     # Need to wait for background task or run synchronously for testing
