@@ -1,33 +1,24 @@
-# Use an official Python runtime as a parent image
-FROM python:3.11-slim-bullseye
+# Use the official Python 3.12 Alpine image as a base
+FROM python:3.12-alpine
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Prevent python from writing pyc files to disc
-ENV PYTHONDONTWRITEBYTECODE 1
-# Ensure python output is sent straight to terminal (useful for logs)
-ENV PYTHONUNBUFFERED 1
-
-# Install system dependencies if needed (e.g., for psycopg2)
-# RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev && rm -rf /var/lib/apt/lists/*
-
-# Install pip requirements
-# Copy only requirements first to leverage Docker cache
+# Copy the requirements file into the container
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip
-# Use the specific requirements provided by the user
-RUN pip install --no-cache-dir -r requirements.txt
+
+# Install build dependencies, install Python packages, then remove build dependencies
+# Using --no-cache-dir reduces image size
+RUN apk add --no-cache --virtual .build-deps gcc musl-dev \
+    && pip install --no-cache-dir -r requirements.txt \
+    && apk del .build-deps
 
 # Copy the rest of the application code into the container
 COPY . .
 
-# Make port 8000 available to the world outside this container
+# Expose the port the app runs on
 EXPOSE 8000
 
-# Define environment variable (optional, can be overridden)
-# ENV DATABASE_URL sqlite:///./database.db
-
-# Run main.py when the container launches
-# Use the command from main.py but without reload for the image
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Command to run the application using Uvicorn
+# We use the non-reloading version for production
+CMD ["uvicorn", "manage:app", "--host", "0.0.0.0", "--port", "8000"]
