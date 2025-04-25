@@ -20,10 +20,7 @@ COPY . .
 # Expose the port the app runs on
 EXPOSE 8000
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
 
-ENTRYPOINT ["/entrypoint.sh"]
 
 # Command to run the application using Uvicorn
 # We use the non-reloading version for production
