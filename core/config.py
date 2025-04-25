@@ -2,6 +2,9 @@ import os
 from typing import Any, Dict # Import Any, Dict
 from pydantic_settings import BaseSettings
 from pydantic import Field, model_validator # Import model_validator
+from dotenv import load_dotenv
+load_dotenv()
+
 
 class Settings(BaseSettings):
     DEBUG: bool = True
