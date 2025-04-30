@@ -1,6 +1,6 @@
 # Personal Finance Management API
 
-This project provides a backend API for managing personal finances, allowing users to track income and expenses, categorize transactions, set budgets, define recurring transactions, and view reports. It is built using FastAPI, SQLModel, and includes user authentication with JWT. The application supports both synchronous and asynchronous database operations based on configuration.
+This project provides a robust backend API designed to empower users with comprehensive control over their personal finances. It offers a suite of features for meticulous tracking of income and expenses, intelligent categorization of transactions, proactive budget setting, automated recurring transaction management, and insightful financial reporting. Built upon the solid foundation of FastAPI and SQLModel, the API ensures high performance and maintainability. User authentication is implemented using JWT, providing secure access to personalized financial data. The application is engineered to support both synchronous and asynchronous database operations, adapting to different deployment environments and scaling requirements. This API is ideal for individuals seeking a powerful tool to gain a deeper understanding of their financial habits and make informed decisions to achieve their financial goals.
 
 ## Features Implemented
 
@@ -148,12 +148,18 @@ This project provides a backend API for managing personal finances, allowing use
 1.  **Prerequisites:** Docker and Docker Compose installed.
 2.  **Create `.env` file:** Copy `.env.example` to `.env` (`cp .env.example .env`).
 3.  **Configure `.env`:**
-    *   **`SECRET_KEY`:** Generate a strong secret key (e.g., `openssl rand -hex 32`) and replace the placeholder.
-    *   **`DATABASE_URL`:** Choose your desired database URL (see examples in `.env.example`). Ensure the URL prefix matches sync/async drivers if you also set `USE_ASYNC_DB`.
-    *   **`USE_ASYNC_DB` (Optional):** Set to `True` or `False` to explicitly control mode, overriding inference from `DATABASE_URL`.
-    *   **AI API Keys:** Set `OPENAI_API_KEY`, `GEMINI_API_KEY`, etc., for the AI providers you intend to use.
-    *   **Database Service (If not SQLite):** If using PostgreSQL or MySQL, uncomment the corresponding service (`db_postgres` or `db_mysql`) and `volumes` section in `docker-compose.yml`. Update the database credentials in the `environment` section of the chosen service in `docker-compose.yml` to match your `DATABASE_URL`.
-4.  **Install Drivers (If not SQLite):** Uncomment the required database driver(s) (sync and/or async) in `requirements.txt`. Ensure AI libraries (`openai`, `google-generativeai`, etc.) are also installed or uncommented.
+    *   **`SECRET_KEY`:** Generate a strong secret key (e.g., `openssl rand -hex 32`) and replace the placeholder. This key is used for JWT token generation and should be kept secret. You can generate a key using `openssl rand -hex 32`.
+    *   **`DATABASE_URL`:** Specify the database connection string. Examples are provided in `.env.example` for SQLite, PostgreSQL, and MySQL.
+        *   **SQLite:** `sqlite:///./database.db` (for synchronous) or `sqlite+aiosqlite:///./database.db` (for asynchronous).
+        *   **PostgreSQL:** `postgresql+asyncpg://user:password@host:port/database` (asynchronous) or `postgresql+psycopg2://user:password@host:port/database` (synchronous).
+        *   **MySQL:** `mysql+asyncmy://user:password@host:port/database` (asynchronous) or `mysql+pymysql://user:password@host:port/database` (synchronous).
+    *   **`USE_ASYNC_DB` (Optional):** Set to `True` to use asynchronous database operations or `False` for synchronous operations. If not set, the application will attempt to infer this from the `DATABASE_URL` prefix (e.g., `asyncpg` in the URL implies asynchronous). Explicitly setting this is recommended for clarity.
+    *   **AI API Keys:** Configure API keys for the AI providers you wish to use.
+        *   **`OPENAI_API_KEY`:** API key for OpenAI.
+        *   **`GEMINI_API_KEY`:** API key for Google Gemini.
+        *   ... (Add other AI provider keys as needed)
+    *   **Database Service (If not SQLite):** If using PostgreSQL or MySQL, ensure the corresponding service (`db_postgres` or `db_mysql`) is uncommented and properly configured in `docker-compose.yml`. Update the database credentials in the `environment` section of the chosen service in `docker-compose.yml` to match your `DATABASE_URL`. The database host should be set to the service name (e.g., `db_postgres` or `db_mysql`).
+4.  **Install Drivers (If not SQLite):** Ensure the necessary database drivers (synchronous and/or asynchronous) are installed. If using Docker, these are already included in the image. If developing locally, install them using pip. Also, ensure AI libraries (`openai`, `google-generativeai`, etc.) are installed if you intend to use the AI consultation feature.
 5.  **Build and Run:**
     ```bash
     docker-compose up --build -d
@@ -223,6 +229,13 @@ Below is a detailed list of available API endpoints.
         }
         ```
     *   **Response:** `UserRead` (id, email, is_active)
+        ```json
+        {
+          "id": 1,
+          "email": "user@example.com",
+          "is_active": true
+        }
+        ```
 
 *   **`POST /token`**
     *   **Description:** Authenticate user and return JWT tokens.
@@ -230,16 +243,37 @@ Below is a detailed list of available API endpoints.
     *   **Rate Limit:** Yes (e.g., 5/minute)
     *   **Request Body:** Form data (`username`=email, `password`)
     *   **Response:** `Token` (access_token, refresh_token, token_type)
+        ```json
+        {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "token_type": "bearer"
+        }
+        ```
 
 *   **`POST /refresh`**
     *   **Description:** Exchange a refresh token for a new access token.
     *   **Auth:** Requires valid Refresh Token in `Authorization: Bearer <refresh_token>` header.
     *   **Response:** `Token` (new access_token, original refresh_token, token_type)
+        ```json
+        {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "token_type": "bearer"
+        }
+        ```
 
 *   **`GET /users/me`**
     *   **Description:** Fetch the current logged-in user's profile.
     *   **Auth:** Requires valid Access Token.
     *   **Response:** `UserRead` (id, email, is_active)
+        ```json
+        {
+          "id": 1,
+          "email": "user@example.com",
+          "is_active": true
+        }
+        ```
 
 *   **`PUT /users/me/password`**
     *   **Description:** Update the current logged-in user's password.
@@ -252,6 +286,7 @@ Below is a detailed list of available API endpoints.
         }
         ```
     *   **Response:** `204 No Content`
+        *(No content is returned on success)*
 
 **Categories (`/categories`)**
 
@@ -268,27 +303,80 @@ Below is a detailed list of available API endpoints.
         }
         ```
     *   **Response:** `CategoryRead` (id, name, description, type, owner_id)
+        ```json
+        {
+          "id": 1,
+          "name": "Salary",
+          "description": "Monthly income",
+          "type": "INCOME",
+          "owner_id": 1
+        }
+        ```
 
 *   **`GET /`**
     *   **Description:** Retrieve categories for the current user.
     *   **Query Params:** `skip` (int, default 0), `limit` (int, default 100)
     *   **Response:** `List[CategoryRead]`
+        ```json
+        [
+          {
+            "id": 1,
+            "name": "Salary",
+            "description": "Monthly income",
+            "type": "INCOME",
+            "owner_id": 1
+          },
+          {
+            "id": 2,
+            "name": "Groceries",
+            "description": "Weekly expenses",
+            "type": "EXPENSE",
+            "owner_id": 1
+          }
+        ]
+        ```
 
 *   **`GET /{category_id}`**
     *   **Description:** Retrieve a specific category by ID.
     *   **Path Param:** `category_id` (int)
     *   **Response:** `CategoryRead`
+        ```json
+        {
+          "id": 1,
+          "name": "Salary",
+          "description": "Monthly income",
+          "type": "INCOME",
+          "owner_id": 1
+        }
+        ```
 
 *   **`PUT /{category_id}`**
     *   **Description:** Update an existing category.
     *   **Path Param:** `category_id` (int)
     *   **Request Body:** `CategoryBase`
+        ```json
+        {
+          "name": "Main Salary",
+          "description": "Main monthly income",
+          "type": "INCOME"
+        }
+        ```
     *   **Response:** `CategoryRead`
+        ```json
+        {
+          "id": 1,
+          "name": "Main Salary",
+          "description": "Main monthly income",
+          "type": "INCOME",
+          "owner_id": 1
+        }
+        ```
 
 *   **`DELETE /{category_id}`**
     *   **Description:** Delete a category.
     *   **Path Param:** `category_id` (int)
     *   **Response:** `204 No Content`
+        *(No content is returned on success)*
 
 **Transactions (`/transactions`)**
 
@@ -306,27 +394,112 @@ Below is a detailed list of available API endpoints.
         }
         ```
     *   **Response:** `TransactionRead` (id, date, amount, description, type, category_id, owner_id)
+        ```json
+        {
+          "id": 1,
+          "date": "2024-04-24",
+          "amount": 55.75,
+          "description": "Weekly groceries",
+          "type": "EXPENSE",
+          "category_id": 1,
+          "owner_id": 1
+        }
+        ```
 
 *   **`GET /`**
     *   **Description:** Retrieve transactions for the current user.
     *   **Query Params:** `skip` (int, default 0), `limit` (int, default 100), `start_date` (date, optional), `end_date` (date, optional), `category_id` (int, optional)
     *   **Response:** `List[TransactionReadWithCategory]` (includes category details)
+        ```json
+        [
+          {
+            "id": 1,
+            "date": "2024-04-24",
+            "amount": 55.75,
+            "description": "Weekly groceries",
+            "type": "EXPENSE",
+            "category_id": 1,
+            "owner_id": 1,
+            "category": {
+              "id": 1,
+              "name": "Groceries",
+              "description": "Weekly expenses",
+              "type": "EXPENSE",
+              "owner_id": 1
+            }
+          },
+          {
+            "id": 2,
+            "date": "2024-04-23",
+            "amount": 2000.00,
+            "description": "Monthly salary",
+            "type": "INCOME",
+            "category_id": 2,
+            "owner_id": 1,
+            "category": {
+              "id": 2,
+              "name": "Salary",
+              "description": "Monthly income",
+              "type": "INCOME",
+              "owner_id": 1
+            }
+          }
+        ]
+        ```
 
 *   **`GET /{transaction_id}`**
     *   **Description:** Retrieve a specific transaction by ID.
     *   **Path Param:** `transaction_id` (int)
     *   **Response:** `TransactionReadWithCategory`
+        ```json
+        {
+          "id": 1,
+          "date": "2024-04-24",
+          "amount": 55.75,
+          "description": "Weekly groceries",
+          "type": "EXPENSE",
+          "category_id": 1,
+          "owner_id": 1,
+          "category": {
+            "id": 1,
+            "name": "Groceries",
+            "description": "Weekly expenses",
+            "type": "EXPENSE",
+            "owner_id": 1
+          }
+        }
+        ```
 
 *   **`PUT /{transaction_id}`**
     *   **Description:** Update an existing transaction.
     *   **Path Param:** `transaction_id` (int)
     *   **Request Body:** `TransactionBase`
+        ```json
+        {
+          "date": "2024-04-25",
+          "amount": 60.00,
+          "description": "Weekly groceries",
+          "category_id": 1
+        }
+        ```
     *   **Response:** `TransactionRead`
+        ```json
+        {
+          "id": 1,
+          "date": "2024-04-25",
+          "amount": 60.00,
+          "description": "Weekly groceries",
+          "type": "EXPENSE",
+          "category_id": 1,
+          "owner_id": 1
+        }
+        ```
 
 *   **`DELETE /{transaction_id}`**
     *   **Description:** Delete a transaction.
     *   **Path Param:** `transaction_id` (int)
     *   **Response:** `204 No Content`
+        *(No content is returned on success)*
 
 **Reports (`/reports`)**
 
@@ -335,17 +508,98 @@ Below is a detailed list of available API endpoints.
 *   **`GET /monthly`**
     *   **Description:** Generates a financial report for a specific month and year.
     *   **Query Params:** `year` (int, required), `month` (int, required, 1-12)
+        *   Example: `?year=2024&month=4`
     *   **Response:** `MonthlyReport` (totals, net balance, category breakdowns)
+        ```json
+        {
+          "totals": {
+            "income": 2000.00,
+            "expenses": 1000.00,
+            "net_balance": 1000.00
+          },
+          "category_breakdowns": [
+            {
+              "category_name": "Salary",
+              "income": 2000.00,
+              "expenses": 0.00
+            },
+            {
+              "category_name": "Groceries",
+              "income": 0.00,
+              "expenses": 500.00
+            },
+            {
+              "category_name": "Rent",
+              "income": 0.00,
+              "expenses": 500.00
+            }
+          ]
+        }
+        ```
 
 *   **`GET /yearly`**
     *   **Description:** Generates a financial report for a specific year.
     *   **Query Params:** `year` (int, required)
+        *   Example: `?year=2024`
     *   **Response:** `YearlyReport` (totals, net balance, category breakdowns)
+        ```json
+        {
+          "totals": {
+            "income": 24000.00,
+            "expenses": 12000.00,
+            "net_balance": 12000.00
+          },
+          "category_breakdowns": [
+            {
+              "category_name": "Salary",
+              "income": 24000.00,
+              "expenses": 0.00
+            },
+            {
+              "category_name": "Groceries",
+              "income": 0.00,
+              "expenses": 6000.00
+            },
+            {
+              "category_name": "Rent",
+              "income": 0.00,
+              "expenses": 6000.00
+            }
+          ]
+        }
+        ```
 
 *   **`GET /custom`**
     *   **Description:** Generates a financial report for a custom date range.
     *   **Query Params:** `start_date` (date, required), `end_date` (date, required)
+        *   Example: `?start_date=2024-01-01&end_date=2024-03-31`
     *   **Response:** `DateRangeReport` (totals, net balance, category breakdowns)
+        ```json
+        {
+          "totals": {
+            "income": 6000.00,
+            "expenses": 3000.00,
+            "net_balance": 3000.00
+          },
+          "category_breakdowns": [
+            {
+              "category_name": "Salary",
+              "income": 6000.00,
+              "expenses": 0.00
+            },
+            {
+              "category_name": "Groceries",
+              "income": 0.00,
+              "expenses": 1500.00
+            },
+            {
+              "category_name": "Rent",
+              "income": 0.00,
+              "expenses": 1500.00
+            }
+          ]
+        }
+        ```
 
 **Budgets (`/budgets`)**
 
@@ -363,27 +617,86 @@ Below is a detailed list of available API endpoints.
         }
         ```
     *   **Response:** `BudgetRead` (id, year, month, amount, category_id, owner_id)
+        ```json
+        {
+          "id": 1,
+          "year": 2024,
+          "month": 4,
+          "amount": 500.00,
+          "category_id": 1,
+          "owner_id": 1
+        }
+        ```
 
 *   **`GET /`**
     *   **Description:** Retrieve budgets for the current user.
     *   **Query Params:** `skip` (int, default 0), `limit` (int, default 100), `year` (int, optional), `month` (int, optional), `category_id` (int, optional)
     *   **Response:** `List[BudgetRead]`
+        ```json
+        [
+          {
+            "id": 1,
+            "year": 2024,
+            "month": 4,
+            "amount": 500.00,
+            "category_id": 1,
+            "owner_id": 1
+          },
+          {
+            "id": 2,
+            "year": 2024,
+            "month": 5,
+            "amount": 1000.00,
+            "category_id": null,
+            "owner_id": 1
+          }
+        ]
+        ```
 
 *   **`GET /{budget_id}`**
     *   **Description:** Retrieve a specific budget by ID.
     *   **Path Param:** `budget_id` (int)
     *   **Response:** `BudgetRead`
+        ```json
+        {
+          "id": 1,
+          "year": 2024,
+          "month": 4,
+          "amount": 500.00,
+          "category_id": 1,
+          "owner_id": 1
+        }
+        ```
 
 *   **`PUT /{budget_id}`**
     *   **Description:** Update an existing budget.
     *   **Path Param:** `budget_id` (int)
     *   **Request Body:** `BudgetCreate`
+        ```json
+        {
+          "year": 2024,
+          "month": 4,
+          "amount": 600.00,
+          "category_id": 1
+        }
+        ```
     *   **Response:** `BudgetRead`
+        ```json
+        {
+          "id": 1,
+          "year": 2024,
+          "month": 4,
+          "amount": 600.00,
+          "category_id": 1,
+          "owner_id": 1
+        }
+        ```
 
 *   **`DELETE /{budget_id}`**
     *   **Description:** Delete a budget.
     *   **Path Param:** `budget_id` (int)
     *   **Response:** `204 No Content`
+        *(No content is returned on success)*
 
 **Recurring Transactions (`/recurring-transactions`)**
 
@@ -405,32 +718,135 @@ Below is a detailed list of available API endpoints.
         }
         ```
     *   **Response:** `RecurringTransactionRead` (includes id, owner_id, last_created_date)
+        ```json
+        {
+          "id": 1,
+          "owner_id": 1,
+          "description": "Monthly Subscription",
+          "amount": 15.00,
+          "category_id": 10,
+          "frequency": "MONTHLY",
+          "interval": 1,
+          "start_date": "2024-05-15",
+          "end_date": null,
+          "day_of_month": 15,
+          "day_of_week": null,
+          "is_active": true,
+          "last_created_date": null
+        }
+        ```
 
 *   **`GET /`**
     *   **Description:** Retrieve recurring transaction rules for the current user.
     *   **Query Params:** `skip` (int, default 0), `limit` (int, default 100), `is_active` (bool, optional)
     *   **Response:** `List[RecurringTransactionRead]`
+        ```json
+        [
+          {
+            "id": 1,
+            "owner_id": 1,
+            "description": "Monthly Subscription",
+            "amount": 15.00,
+            "category_id": 10,
+            "frequency": "MONTHLY",
+            "interval": 1,
+            "start_date": "2024-05-15",
+            "end_date": null,
+            "day_of_month": 15,
+            "day_of_week": null,
+            "is_active": true,
+            "last_created_date": null
+          },
+          {
+            "id": 2,
+            "owner_id": 1,
+            "description": "Weekly Groceries",
+            "amount": 50.00,
+            "category_id": 1,
+            "frequency": "WEEKLY",
+            "interval": 1,
+            "start_date": "2024-05-01",
+            "end_date": null,
+            "day_of_month": null,
+            "day_of_week": "MONDAY",
+            "is_active": true,
+            "last_created_date": "2024-04-29"
+          }
+        ]
+        ```
 
 *   **`GET /{recurring_tx_id}`**
     *   **Description:** Retrieve a specific recurring transaction rule by ID.
     *   **Path Param:** `recurring_tx_id` (int)
     *   **Response:** `RecurringTransactionRead`
+        ```json
+        {
+          "id": 1,
+          "owner_id": 1,
+          "description": "Monthly Subscription",
+          "amount": 15.00,
+          "category_id": 10,
+          "frequency": "MONTHLY",
+          "interval": 1,
+          "start_date": "2024-05-15",
+          "end_date": null,
+          "day_of_month": 15,
+          "day_of_week": null,
+          "is_active": true,
+          "last_created_date": null
+        }
+        ```
 
 *   **`PUT /{recurring_tx_id}`**
     *   **Description:** Update an existing recurring transaction rule.
     *   **Path Param:** `recurring_tx_id` (int)
     *   **Request Body:** `RecurringTransactionCreate`
+        ```json
+        {
+          "description": "Monthly Subscription",
+          "amount": 16.00,
+          "category_id": 10,
+          "frequency": "MONTHLY",
+          "interval": 1,
+          "start_date": "2024-05-15",
+          "day_of_month": 15,
+          "is_active": true
+        }
+        ```
     *   **Response:** `RecurringTransactionRead`
+        ```json
+        {
+          "id": 1,
+          "owner_id": 1,
+          "description": "Monthly Subscription",
+          "amount": 16.00,
+          "category_id": 10,
+          "frequency": "MONTHLY",
+          "interval": 1,
+          "start_date": "2024-05-15",
+          "end_date": null,
+          "day_of_month": 15,
+          "day_of_week": null,
+          "is_active": true,
+          "last_created_date": null
+        }
+        ```
 
 *   **`DELETE /{recurring_tx_id}`**
     *   **Description:** Delete a recurring transaction rule.
     *   **Path Param:** `recurring_tx_id` (int)
     *   **Response:** `204 No Content`
+        *(No content is returned on success)*
 
 *   **`POST /generate-due`**
     *   **Description:** Manually triggers the generation of due recurring transactions (runs in background).
     *   **Query Params:** `run_date_str` (str, optional, YYYY-MM-DD)
     *   **Response:** `202 Accepted` with `{"message": "Recurring transaction generation task accepted."}`
+        ```json
+        {
+          "message": "Recurring transaction generation task accepted."
+        }
+        ```
 
 **AI Consultation (`/ai-consultation`)**
 
@@ -447,6 +863,13 @@ Below is a detailed list of available API endpoints.
         }
         ```
     *   **Response:** `AIConsultationResponse` (provider, query, response)
+        ```json
+        {
+          "provider": "openai",
+          "query": "What are some strategies to save more money?",
+          "response": "Some strategies to save more money include creating a budget, tracking your expenses, and setting financial goals."
+        }
+        ```
 
 **Notifications (`/notifications`)**
 
@@ -456,6 +879,24 @@ Below is a detailed list of available API endpoints.
     *   **Description:** Retrieve notifications for the current user.
     *   **Query Params:** `skip` (int, default 0), `limit` (int, default 100, max 200), `is_read` (bool, optional)
     *   **Response:** `List[NotificationRead]` (id, user_id, message, is_read, created_at)
+        ```json
+        [
+          {
+            "id": 1,
+            "user_id": 1,
+            "message": "Recurring transaction 'Monthly Subscription' created.",
+            "is_read": false,
+            "created_at": "2024-04-30T08:00:00"
+          },
+          {
+            "id": 2,
+            "user_id": 1,
+            "message": "Budget 'Groceries' exceeded.",
+            "is_read": false,
+            "created_at": "2024-04-30T09:00:00"
+          }
+        ]
+        ```
 
 *   **`PATCH /{notification_id}`**
     *   **Description:** Mark a specific notification as read or unread.
@@ -467,10 +908,20 @@ Below is a detailed list of available API endpoints.
         }
         ```
     *   **Response:** `NotificationRead`
+        ```json
+        {
+          "id": 1,
+          "user_id": 1,
+          "message": "Recurring transaction 'Monthly Subscription' created.",
+          "is_read": true,
+          "created_at": "2024-04-30T08:00:00"
+        }
+        ```
 
 *   **`POST /mark-all-read`**
     *   **Description:** Mark all unread notifications for the current user as read.
     *   **Response:** `204 No Content`
+        *(No content is returned on success)*
 
 ## Testing
 
@@ -485,6 +936,10 @@ Below is a detailed list of available API endpoints.
     ```bash
     pytest --cov=core --cov=routers --cov=services --cov=middlewares --cov-report=term-missing -v
     ```
+
+## Database Schema
+
+The application uses SQLModel to define the database schema. The following tables are defined:
 
 ## Future Development Plan
 

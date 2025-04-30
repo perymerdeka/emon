@@ -80,13 +80,8 @@ async def async_session_scope() -> AsyncGenerator[AsyncSession, None]:
 # but explicitly yielding the correct type might be cleaner if feasible.
 # However, the dependency function itself MUST be async if it *might* yield an async session.
 async def get_db_session() -> Any: # Return type Any due to conditional yield
-    """Dependency that yields either an AsyncSession or sync Session based on settings."""
+    """Dependency that returns either an AsyncSession or sync Session based on settings."""
     if settings.USE_ASYNC_DB:
-        # print("DEBUG: Yielding ASYNC session from get_db_session")
-        async for session in get_async_session():
-            yield session
+        return AsyncSession(async_engine, expire_on_commit=False)
     else:
-        # print("DEBUG: Yielding SYNC session from get_db_session")
-        # FastAPI allows yielding sync generator from async def
-        for session in get_sync_session():
-            yield session
+        return Session(sync_engine)
