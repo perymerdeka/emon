@@ -7,9 +7,10 @@ WORKDIR /app
 # Copy the requirements file into the container
 COPY requirements.txt .
 
-# Install build dependencies, system libraries for packages, install Python packages, then remove build dependencies
+# Install build dependencies, system libraries, and netcat
 # Using --no-cache-dir reduces image size
 RUN apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev mariadb-dev \
+    && apk add --no-cache netcat-openbsd \
     && pip install --no-cache-dir -r requirements.txt \
     && apk del .build-deps
 
@@ -18,6 +19,8 @@ COPY . .
 
 # Expose the port the app runs on
 EXPOSE 8000
+
+
 
 # Command to run the application using Uvicorn
 # We use the non-reloading version for production
