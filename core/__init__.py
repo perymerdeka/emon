@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware # Optional: Add CORS if needed
+from starlette.middleware.gzip import GZipMiddleware
 from contextlib import asynccontextmanager # Import for lifespan
 
 # Import individual routers directly
@@ -13,12 +14,15 @@ from core.config import settings # Import settings
 from core.limiter import limiter, RateLimitExceeded, _rate_limit_exceeded_handler
 # Import scheduler functions
 from core.scheduler import start_scheduler, shutdown_scheduler
+from core.cache import setup_cache
 
 # --- Lifespan Context Manager ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup logic
     print("Application startup...")
+    # Initialize cache
+    await setup_cache()
     # Start the scheduler
     await start_scheduler()
     yield
@@ -35,6 +39,9 @@ def create_app() -> FastAPI:
             debug=settings.DEBUG,
             lifespan=lifespan # Add lifespan context manager
         )
+
+    # Add GZip compression
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
 
     # --- Add Middleware ---
     # AuthMiddleware should be added before routes that need protection
