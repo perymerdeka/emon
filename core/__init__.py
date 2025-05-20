@@ -14,7 +14,7 @@ from core.config import settings # Import settings
 from core.limiter import limiter, RateLimitExceeded, _rate_limit_exceeded_handler
 # Import scheduler functions
 from core.scheduler import start_scheduler, shutdown_scheduler
-from core.cache import setup_cache
+# from core.cache import setup_cache
 
 # --- Lifespan Context Manager ---
 @asynccontextmanager
@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
     # Startup logic
     print("Application startup...")
     # Initialize cache
-    await setup_cache()
+    # await setup_cache()
     # Start the scheduler
     await start_scheduler()
     yield
