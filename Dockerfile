@@ -10,7 +10,7 @@ COPY requirements.txt .
 # Install build dependencies, system libraries, and netcat
 # Using --no-cache-dir reduces image size
 RUN apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev mariadb-dev \
-    && apk add --no-cache netcat-openbsd redis \
+    && apk add --no-cache netcat-openbsd redis curl \
     && pip install --no-cache-dir -r requirements.txt \
     && apk del .build-deps
 
